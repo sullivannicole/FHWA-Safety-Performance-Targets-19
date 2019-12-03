@@ -1,0 +1,88 @@
+---
+title: "FHWA Targets"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sf)
+library(tidyverse)
+```
+
+```{r}
+path <- "N:\\MTS\\Working\\Planning\\Performance Based Planning\\Performance Measures 2019\\PM1\\MetCouncil (1)\\"
+
+crashes <- st_read(paste0(path, "MetCouncil_2018.shp"))
+
+```
+
+```{r}
+# Drop geometry
+crashes <- crashes %>%
+  st_drop_geometry()
+
+# Are there any duplicate crashes?
+crashes_df %>%
+  group_by(DPSCRASHID) %>%
+  count() %>%
+  filter(n > 1)
+
+# Collapse all duplicated crashes
+fatalities <- crashes_df %>%
+  dplyr::select(NUMK, DPSCRASHID) %>%
+  unique()
+
+# Total fatalities
+sum(fatalities$NUMK)
+
+names(crashes_df)
+
+crashes_df %>%
+  dplyr::select(SEX1, SEX2, SEX3, SEX4, DPSCRASHID)
+
+# Number of people with injury level 2
+crashes_df %>%
+  dplyr::select(INJ1, INJ2, INJ3, INJ4, DPSCRASHID) %>%
+  gather(INJ1:INJ4, key = "Drop", value = "Injury") %>%
+  dplyr::select(-Drop) %>%
+  filter(Injury == 2) %>%
+  count()
+
+crashes_df %>%
+  filter(SEV == 2) %>%
+  dplyr::select(INJ1, INJ2, INJ3, INJ4)
+
+names(crashes_df)
+
+# Number of people involved in severe crashes via sex fields - may not have been filled in by officer for all individuals
+crashes_df %>%
+  filter(SEV == 2) %>%
+  dplyr::select(SEX1, SEX2, SEX3, SEX4, DPSCRASHID) %>%
+  gather(SEX1:SEX4, key = "Drop", value = "Sex") %>%
+  dplyr::select(-Drop) %>%
+  filter(!is.na(Sex)) %>%
+  count()
+
+# Number of people involved in severe crashes via injury fields - may not have been filled in by officer for all individuals
+crashes_df %>%
+  filter(SEV == 2) %>%
+  dplyr::select(INJ1, INJ2, INJ3, INJ4, DPSCRASHID) %>%
+  gather(INJ1:INJ4, key = "Drop", value = "Injury") %>%
+  dplyr::select(-Drop) %>%
+  group_by(Injury) %>%
+  count()
+
+# Pedalcyclists and pedestrians and other non-motorists involved in fatal or serious injury crashes
+crashes_df %>%
+  filter(SEV == 1 | SEV == 2) %>%
+  dplyr::select(MHE1, MHE2, MHE3, DPSCRASHID) %>%
+  gather(MHE1:MHE3, key = "Drop", value = "MHE") %>%
+  filter(MHE == 8 | MHE == 9 | MHE == 51) %>%
+  dplyr::select(-Drop) %>%
+  count()
+
+names(crashes_df)
+```
